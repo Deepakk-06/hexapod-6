@@ -1,0 +1,40 @@
+# STS3215 servo id / calibration map.
+#
+# id: physical servo ID on the bus (confirmed with user: coxa=3n+1, tibia=3n+2, femur=3n+3)
+# direction: +1 or -1, flips which way "positive kinematic angle" moves the
+#            servo. Right-side legs are usually mirrored vs left-side legs,
+#            so their directions often need flipping relative to the
+#            equivalent left-side joint. Start with the signs below (a
+#            reasonable mirrored guess) and correct per-joint after
+#            watching the robot move.
+# offset_deg: fine trim, added to the kinematic angle before conversion,
+#            to compensate for the horn not landing exactly on the
+#            kinematic zero when it was centered at 2048. Start at 0 and
+#            adjust using the calibration helper (see README).
+# center_ticks: should stay 2048 since you centered all servos there.
+
+legs:
+  LF:
+    coxa:  {id: 1,  direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 3,  direction: -1, offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 2,  direction: -1, offset_deg: 0.0, center_ticks: 2048}
+  LM:
+    coxa:  {id: 4,  direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 6,  direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 5,  direction: -1, offset_deg: 0.0, center_ticks: 2048}
+  LR:
+    coxa:  {id: 7,  direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 9,  direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 8,  direction: -1, offset_deg: 0.0, center_ticks: 2048}
+  RR:
+    coxa:  {id: 10, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 12, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 11, direction: -1, offset_deg: 0.0, center_ticks: 2048}
+  RM:
+    coxa:  {id: 13, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 15, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 14, direction: -1, offset_deg: 0.0, center_ticks: 2048}
+  RF:
+    coxa:  {id: 16, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    femur: {id: 18, direction: 1,  offset_deg: 0.0, center_ticks: 2048}
+    tibia: {id: 17, direction: -1, offset_deg: 0.0, center_ticks: 2048}

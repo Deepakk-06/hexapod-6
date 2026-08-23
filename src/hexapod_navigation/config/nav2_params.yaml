@@ -1,0 +1,292 @@
+# Nav2 params for the STS3215 hexapod.
+#
+# Every velocity/acceleration/footprint value here is derived from the
+# robot's REAL geometry and REAL max speed (see hexapod_control/gait_node.py
+# defaults: max_stride_mm=60, step_period_s=1.0 -> 0.06 m/s max; the
+# original rospider's nav2_params.yaml had a robot_radius of 0.01m, which
+# is obviously wrong for this size robot -- not reused here, recomputed
+# from actual leg-mount + stance-radius geometry instead (~0.30m).
+#
+# This robot is MUCH slower than typical Nav2 tutorial robots (wheeled
+# robots are usually tuned for 0.2-0.5 m/s) -- controller/planner
+# tolerances and speeds are scaled down accordingly, or the default
+# tuning will badly overshoot/oscillate for a robot this slow.
+
+amcl:
+  ros__parameters:
+    use_sim_time: false
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_footprint"
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 12.0
+    laser_min_range: 0.15
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: "odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.1  # smaller than wheeled-robot default: this robot moves slowly,
+                         # want particle updates to keep pace with slow motion
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: scan
+
+amcl_map_client:
+  ros__parameters:
+    use_sim_time: false
+
+amcl_rclcpp_node:
+  ros__parameters:
+    use_sim_time: false
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    # generous goal/transform tolerances given this robot's slow, somewhat
+    # imprecise open-loop-odometry-assisted motion -- tight tolerances would
+    # cause excessive re-planning/oscillation for a robot this slow
+    default_nav_to_pose_bt_xml: ""
+    default_nav_through_poses_bt_xml: ""
+
+controller_server:
+  ros__parameters:
+    use_sim_time: false
+    controller_frequency: 10.0  # this robot is slow; no need for a fast control loop
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.03  # small: robot moves ~0.06m/s, don't want false "stuck" triggers
+      movement_time_allowance: 15.0
+
+    general_goal_checker:
+      stateful: true
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.08
+      yaw_goal_tolerance: 0.15
+
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.05        # slightly under max (0.06) for margin
+      lookahead_dist: 0.25
+      min_lookahead_dist: 0.15
+      max_lookahead_dist: 0.4
+      lookahead_time: 2.0
+      rotate_to_heading_angular_vel: 0.3
+      transform_tolerance: 0.3
+      use_velocity_scaled_lookahead_dist: false
+      min_approach_linear_velocity: 0.02
+      approach_velocity_scaling_dist: 0.3
+      max_allowed_time_to_collision_up_to_carrot: 2.0
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: false
+      regulated_linear_scaling_min_radius: 0.6
+      regulated_linear_scaling_min_speed: 0.02
+      use_fixed_curvature_lookahead: false
+      use_rotate_to_heading: true
+      rotate_to_heading_min_angle: 0.5
+      max_angular_accel: 1.0
+      max_robot_pose_search_dist: 5.0
+      min_max_speed_lookahead_dist: 0.5
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      global_frame: odom
+      robot_base_frame: base_footprint
+      use_sim_time: false
+      rolling_window: true
+      width: 3
+      height: 3
+      resolution: 0.05
+      robot_radius: 0.30   # computed from real geometry, see file header
+      plugins: ["voxel_layer", "inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.35   # a bit more than robot_radius, since our
+                                   # open-loop odometry drifts more than a
+                                   # wheeled robot's would -- extra buffer
+                                   # against clipping obstacles
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: true
+        publish_voxel_map: true
+        origin_z: 0.0
+        z_resolution: 0.05
+        z_voxels: 16
+        max_obstacle_height: 0.4  # this robot is short -- don't need to track
+                                    # obstacles far above it
+        mark_threshold: 0
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 0.4
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 12.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.15
+      always_send_full_costmap: true
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: base_footprint
+      use_sim_time: false
+      robot_radius: 0.30
+      resolution: 0.05
+      track_unknown_space: true
+      plugins: ["static_layer", "voxel_layer", "inflation_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: true
+        publish_voxel_map: true
+        origin_z: 0.0
+        z_resolution: 0.05
+        z_voxels: 16
+        max_obstacle_height: 0.4
+        mark_threshold: 0
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 0.4
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 12.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.15
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.35
+      always_send_full_costmap: true
+
+map_server:
+  ros__parameters:
+    use_sim_time: false
+    yaml_filename: ""   # supplied at launch time via the `map` launch argument
+
+map_saver:
+  ros__parameters:
+    use_sim_time: false
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: true
+
+planner_server:
+  ros__parameters:
+    use_sim_time: false
+    expected_planner_frequency: 5.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.15
+      use_astar: false
+      allow_unknown: true
+
+smoother_server:
+  ros__parameters:
+    use_sim_time: false
+    smoother_plugins: ["simple_smoother"]
+    simple_smoother:
+      plugin: "nav2_smoother::SimpleSmoother"
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: true
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: false
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    global_frame: odom
+    robot_base_frame: base_footprint
+    transform_tolerance: 0.3
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 0.35    # matches this robot's real max_yaw_stride-derived rate
+    min_rotational_vel: 0.05
+    rotational_acc_lim: 1.0
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: false
+    loop_rate: 20
+    stop_on_failure: false
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: true
+      waypoint_pause_duration: 200
+
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: false
+    smoothing_frequency: 10.0
+    scale_velocities: false
+    feedback: "OPEN_LOOP"
+    max_velocity: [0.06, 0.0, 0.35]   # matches gait_node's actual achievable max
+    min_velocity: [-0.06, 0.0, -0.35]
+    max_accel: [0.1, 0.0, 0.5]
+    max_decel: [-0.1, 0.0, -0.5]
+    odom_topic: "odom"
+    odom_duration: 0.1
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0

@@ -1,0 +1,37 @@
+# ROS2 / colcon build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# STM32 firmware build output
+stm32_firmware/build/
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Local AI model/data (large binary files, don't belong in git)
+local_ai/voice_assistant/*.onnx
+local_ai/voice_assistant/*.onnx.json
+~/ollama/
+~/open-webui/
+
+# Captured/generated calibration output (user-specific, not source)
+/tmp/servo_config_captured.yaml
