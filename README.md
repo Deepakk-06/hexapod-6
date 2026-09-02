@@ -1,4 +1,4 @@
-# Hexapod Robot — Custom STS3215 Walking Stack (ROS2 Humble)
+# Hexapod Robot — Custom STS3215 Walking Stack
 
 A ground-up ROS2 software stack for a 6-legged (hexapod) walking robot, built for a RoSpider-shell chassis retrofitted with different hardware than the stock kit: a Jetson Orin Nano, 18x Feetech STS3215 bus servos, and an RPLidar A1M8 — none of which the original manufacturer's software supports.
 
