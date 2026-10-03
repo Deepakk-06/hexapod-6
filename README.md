@@ -1,7 +1,3 @@
-  echo "STOP: could not clone https://github.com/$OWNER/$REPO, check the owner and repo name"
-else
-cd hx-edit
-cat > README.md <<'EOF'
 <div align="center">
 
 # 🕷️ HEXAPOD-6
