@@ -1,7 +1,3 @@
-OWNER="Deepakk-06"
-REPO="hexapod-6"
-cd ~/Desktop && rm -rf hx-edit
-if ! git clone -q https://github.com/$OWNER/$REPO.git hx-edit; then
   echo "STOP: could not clone https://github.com/$OWNER/$REPO, check the owner and repo name"
 else
 cd hx-edit
@@ -241,11 +237,3 @@ All settable via `ros2 launch ... gait:=... step_period_s:=...` or by editing th
 **Built from first principles. Debugged with telemetry, not guesswork.** 🕷️
 
 </div>
-EOF
-echo "--- files in repo ---"; ls
-git add README.md
-if git diff --cached --quiet; then echo "NOTHING TO CHANGE"
-else git commit -qm "Rewrite README with diagrams and status tracker" && git push -q origin main && echo "DONE: README pushed"
-fi
-cd ~/Desktop && rm -rf hx-edit
-fi****
